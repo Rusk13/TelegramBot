@@ -1,5 +1,16 @@
-package org.scheduler;public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello world!");
+package org.scheduler;
+
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+
+public class Main {
+    public static void main(String[] args) throws TelegramApiException {
+        TelegramBotsApi bot = new TelegramBotsApi(DefaultBotSession.class);
+        try {
+            bot.registerBot(new TelegramBot());
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 }
