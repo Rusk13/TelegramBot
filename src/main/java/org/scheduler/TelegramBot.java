@@ -17,47 +17,164 @@ import static java.lang.Math.toIntExact;
 public class TelegramBot extends TelegramLongPollingBot {
 
     MongoDB mongoDB = new MongoDB();
+    String exist;
+
+    String lastStateRegistration = "first";
     public void onUpdateReceived(Update update){
-        SendMessage message = new SendMessage(); // Create a message object
-        if (update.getMessage().getText().equals("/start")) {
-            // Set variables
-            String message_text = update.getMessage().getText();
-            long chat_id = update.getMessage().getChatId();
+ // Create a message object
 
+        if(update.hasMessage() && update.getMessage().hasText()) {
+            String receivedMessage = update.getMessage().getText();
+            SendMessage sendMessage = null;
 
-            message.setChatId(chat_id);
-            message.setText(message_text);
-
-            String user_first_name = update.getMessage().getChat().getFirstName();
-            String user_last_name = update.getMessage().getChat().getLastName();
-            String user_username = update.getMessage().getChat().getUserName();
-            long user_id = update.getMessage().getChat().getId();
-
-            setButtons(message,update);
-
-            try {
-                execute(message);
-                mongoDB.check(user_first_name, user_last_name, toIntExact(user_id), user_username);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
+            switch (receivedMessage) {
+                case "/start":
+                    sendMessage = handleStart(update);
+                    break;
+                case "Вход":
+                    sendMessage = handleEnter(update);
+                    break;
+                case "Регистрация":
+                    sendMessage = new SendMessage();
+                    sendMessage.setChatId(update.getMessage().getChatId());
+                    sendMessage.setText("Начинаем регистрацию...");
+                    mongoDB.setLastState(toIntExact(update.getMessage().getChat().getId()),"skip");
+                    break;
+                default:
+                    sendMessage = checkStatus(update);
+                    break;
             }
-        } else if(update.getMessage().getText().equals("Регистрация")) {
+
             try {
-                message.setChatId(update.getMessage().getChatId());
-                message.setText("Давайте знакомиться!");
-                execute(message);
-                message.setText("Введите ваше имя и фамилию");
-                execute(message);
-
-
-
-                String name = update.getMessage().getText();
-                message.setText("Вы ввели " + name);
-                execute(message);
+                execute(sendMessage);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
         }
+
+//        if (update.getMessage().getText().equals("/start")) {
+//            // Set variables
+//            String message_text = update.getMessage().getText();
+//            long chat_id = update.getMessage().getChatId();
+//
+//
+//            message.setChatId(chat_id);
+//            message.setText(message_text);
+//
+//            String user_first_name = update.getMessage().getChat().getFirstName();
+//            String user_last_name = update.getMessage().getChat().getLastName();
+//            String user_username = update.getMessage().getChat().getUserName();
+//            long user_id = update.getMessage().getChat().getId();
+//
+//            setButtons(message,update);
+//
+//            try {
+//                exist = mongoDB.check(user_first_name, user_last_name, toIntExact(user_id), user_username);
+//                message.setText(mongoDB.getLastState(toIntExact(user_id)));
+//                execute(message);
+//
+//            } catch (TelegramApiException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        else if(update.getMessage().getText().equals("Регистрация")) {
+//            try {
+//                message.setChatId(update.getMessage().getChatId());
+//                message.setText("Давайте знакомиться!");
+//                execute(message);
+//                message.setText("Введите ваше имя и фамилию");
+//                execute(message);
+//                long user_id = update.getMessage().getChat().getId();
+//                mongoDB.setLastState(toIntExact(user_id), "registration");
+//
+//
+//
+//                String name = update.getMessage().getText();
+//                message.setText("Вы ввели " + name);
+//                execute(message);
+//            } catch (TelegramApiException e) {
+//                e.printStackTrace();
+//            }
+//        }
+    }
+
+    private SendMessage checkStatus(Update update) {
+        SendMessage sendMessage = null;
+        String lastState = mongoDB.getLastState(toIntExact(update.getMessage().getChat().getId()));
+        if(lastState.equals("null")){
+            return handleStart(update);
+        }
+
+        switch (lastState){
+            case "skip":
+                sendMessage = regUser(update);
+                break;
+        }
+
+        sendMessage.setText("test2");
+        return sendMessage;
+
+    }
+
+    private SendMessage regUser(Update update) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        exist = mongoDB.check(toIntExact(update.getMessage().getChat().getId()));
+        if(exist.equals("exists")){
+            sendMessage.setText("Вы уже зарегестрированы");
+            return sendMessage;
+        }
+
+        switch (lastStateRegistration){
+            case "first":
+                sendMessage.setText("Введите ваше имя и фамилию");
+                lastStateRegistration = "firstInput";
+                return sendMessage;
+            case "firstInput":
+                sendMessage.setText(update.getMessage().getText());
+                return sendMessage;
+        }
+
+        sendMessage.setText("test");
+        return sendMessage;
+    }
+
+    private SendMessage handleStart(Update update){
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        String user_first_name = update.getMessage().getChat().getFirstName();
+        String user_last_name = update.getMessage().getChat().getLastName();
+        String user_username = update.getMessage().getChat().getUserName();
+        long user_id = update.getMessage().getChat().getId();
+
+        sendMessage.setText("Приветствую! Я бот для управления вашим расписанием!");
+        exist = mongoDB.check(toIntExact(user_id));
+        setButtons(sendMessage,update);
+        //sendMessage.setText(mongoDB.getLastState(toIntExact(user_id)));
+
+        return sendMessage;
+    }
+
+    private SendMessage handleEnter(Update update){
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
+        String user_first_name = update.getMessage().getChat().getFirstName();
+        String user_last_name = update.getMessage().getChat().getLastName();
+        String user_username = update.getMessage().getChat().getUserName();
+        long user_id = update.getMessage().getChat().getId();
+
+        exist = mongoDB.check(toIntExact(user_id));
+
+        if(exist.equals("exists")) {
+            sendMessage.setText("Приветствую, " + user_first_name);
+        } else {
+            sendMessage.setText("Похоже вас нет в нашей базе, попробуйте зарегестрироваться.");
+        }
+
+        //sendMessage.setText(mongoDB.getLastState(toIntExact(user_id)));
+
+        return sendMessage;
     }
 
 //    private synchronized void sendMsg(String chatId, String s) {
@@ -91,7 +208,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
 
-        sendMessage.setText("Hi! " + update.getMessage().getFrom().getFirstName());
+        //sendMessage.setText("Hi! " + update.getMessage().getFrom().getFirstName());
 
 //        try {
 //            sendMessage.setChatId(update.getMessage().getChatId());

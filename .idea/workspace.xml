@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="742ba1bf-841c-49f4-9d03-709e77a23db9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/scheduler/BotCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/scheduler/MongoDB.java" afterDir="false" />
+    <list default="true" id="742ba1bf-841c-49f4-9d03-709e77a23db9" name="Changes" comment="Made few changes. Add keyboard upon input command /start. Trying to add functionality to store provided user information to my database">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/scheduler/MongoDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/scheduler/MongoDB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/scheduler/TelegramBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/scheduler/TelegramBot.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -71,6 +69,14 @@
       <option name="presentableId" value="Default" />
       <updated>1661196053745</updated>
     </task>
+    <task id="LOCAL-00001" summary="Made few changes. Add keyboard upon input command /start. Trying to add functionality to store provided user information to my database">
+      <created>1661249200915</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1661249200915</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -83,5 +89,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Made few changes. Add keyboard upon input command /start. Trying to add functionality to store provided user information to my database" />
+    <option name="LAST_COMMIT_MESSAGE" value="Made few changes. Add keyboard upon input command /start. Trying to add functionality to store provided user information to my database" />
   </component>
 </project>
