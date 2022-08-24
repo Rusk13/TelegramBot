@@ -20,6 +20,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     String exist;
 
     String lastStateRegistration = "first";
+
+    private String fullName;
+    private String kidName;
+    private String username;
+    private int id;
     public void onUpdateReceived(Update update){
  // Create a message object
 
@@ -35,10 +40,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendMessage = handleEnter(update);
                     break;
                 case "Регистрация":
-                    sendMessage = new SendMessage();
-                    sendMessage.setChatId(update.getMessage().getChatId());
-                    sendMessage.setText("Начинаем регистрацию...");
-                    mongoDB.setLastState(toIntExact(update.getMessage().getChat().getId()),"skip");
+                    sendMessage = regUser(update);
+
                     break;
                 default:
                     sendMessage = checkStatus(update);
@@ -100,21 +103,35 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private SendMessage checkStatus(Update update) {
-        SendMessage sendMessage = null;
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId());
         String lastState = mongoDB.getLastState(toIntExact(update.getMessage().getChat().getId()));
+//        if(lastState.equals("null")){
+//            return handleStart(update);
+//        }
+
         if(lastState.equals("null")){
-            return handleStart(update);
+            switch (lastStateRegistration){
+                case "first":
+                    id = toIntExact(update.getMessage().getChat().getId());
+                    fullName = update.getMessage().getText();
+                    username = update.getMessage().getChat().getUserName();
+                    lastStateRegistration = "second";
+                    sendMessage.setText("Введите имя вашего ребенка:");
+                    break;
+                case "second":
+                    kidName = update.getMessage().getText();
+                    lastStateRegistration = "third";
+
+                    mongoDB.addToDatabase(id,fullName,kidName,username);
+                    mongoDB.setLastState(toIntExact(update.getMessage().getChat().getId()),"registered");
+                    sendMessage.setText("Здравствуйте, " + fullName + "! Вы успешно зарегистрированы.");
+                    break;
+
+            }
         }
 
-        switch (lastState){
-            case "skip":
-                sendMessage = regUser(update);
-                break;
-        }
-
-        sendMessage.setText("test2");
         return sendMessage;
-
     }
 
     private SendMessage regUser(Update update) {
@@ -126,17 +143,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             return sendMessage;
         }
 
-        switch (lastStateRegistration){
-            case "first":
-                sendMessage.setText("Введите ваше имя и фамилию");
-                lastStateRegistration = "firstInput";
-                return sendMessage;
-            case "firstInput":
-                sendMessage.setText(update.getMessage().getText());
-                return sendMessage;
-        }
+        mongoDB.setLastState(toIntExact(update.getMessage().getChat().getId()), "registration");
 
-        sendMessage.setText("test");
+        sendMessage.setText("Введите ваше имя и фамилию:");
         return sendMessage;
     }
 
@@ -159,17 +168,18 @@ public class TelegramBot extends TelegramLongPollingBot {
     private SendMessage handleEnter(Update update){
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getMessage().getChatId());
-        String user_first_name = update.getMessage().getChat().getFirstName();
-        String user_last_name = update.getMessage().getChat().getLastName();
-        String user_username = update.getMessage().getChat().getUserName();
+        String userFullName;
+        String userKidName;
+        String username;
         long user_id = update.getMessage().getChat().getId();
 
         exist = mongoDB.check(toIntExact(user_id));
 
         if(exist.equals("exists")) {
-            sendMessage.setText("Приветствую, " + user_first_name);
+            userFullName = mongoDB.getParentName(toIntExact(user_id));
+            sendMessage.setText("Приветствую, " + userFullName);
         } else {
-            sendMessage.setText("Похоже вас нет в нашей базе, попробуйте зарегестрироваться.");
+            sendMessage.setText("Похоже вас нет в нашей базе, попробуйте зарегистрироваться.");
         }
 
         //sendMessage.setText(mongoDB.getLastState(toIntExact(user_id)));

@@ -26,7 +26,7 @@ public class MongoDB {
 //                    .append("username", username);
 //            collection.insertOne(doc);
             mongoClient.close();
-            System.out.println("User not exists in database. Written.");
+            System.out.println("User not exists in database.");
             return "no_exists";
         } else {
             System.out.println("User exists in database.");
@@ -37,14 +37,13 @@ public class MongoDB {
 
     public void addToDatabase(int user_id, String parentName, String childName, String username){
         setNewConnection();
-        long found = collection.countDocuments(Document.parse("{id : " + Integer.toString(user_id) + "}"));
-            Document doc = new Document("parentName", parentName)
-                    .append("childName", childName)
-                    .append("id", user_id)
-                    .append("username", username);
-            collection.insertOne(doc);
-            mongoClient.close();
-            System.out.println("Written.");
+        Document doc = new Document("parentName", parentName)
+                .append("childName", childName)
+                .append("id", user_id)
+                .append("username", username);
+        collection.insertOne(doc);
+        mongoClient.close();
+        System.out.println("Written.");
     }
 
     public void setNewConnection(){
@@ -68,6 +67,34 @@ public class MongoDB {
         return doc.getString("lastUserStat");
     }
 
+    public String getParentName(int user_id){
+        setNewConnection();
+        long found = collection.countDocuments(Document.parse("{id : " + Integer.toString(user_id) + "}"));
+        if(found==0){
+            return "null";
+        }
+
+        Document doc = collection.find(new BasicDBObject("id", user_id))
+                .projection(Projections.fields(Projections.include("parentName"), Projections.excludeId())).first();
+        mongoClient.close();
+
+        return doc.getString("parentName");
+    }
+
+    public String getChildName(int user_id){
+        setNewConnection();
+        long found = collection.countDocuments(Document.parse("{id : " + Integer.toString(user_id) + "}"));
+        if(found==0){
+            return "null";
+        }
+
+        Document doc = collection.find(new BasicDBObject("id", user_id))
+                .projection(Projections.fields(Projections.include("childName"), Projections.excludeId())).first();
+        mongoClient.close();
+
+        return doc.getString("childName");
+    }
+
     public void setLastState(int user_id, String state){
         setNewConnection();
         long found = collection.countDocuments(Document.parse("{id : " + Integer.toString(user_id) + "}"));
@@ -77,7 +104,6 @@ public class MongoDB {
         Document doc = collection.find(new BasicDBObject("id", user_id))
                 .projection(Projections.fields(Projections.include("lastUserStat"), Projections.excludeId())).first();
         collection.updateOne(new BasicDBObject("id", user_id), new BasicDBObject("$set", new BasicDBObject("lastUserStat", state)));
-        System.out.println("test.");
         mongoClient.close();
     }
 }
